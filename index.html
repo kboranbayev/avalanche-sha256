@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Avalanche Effect Test</title>
+        <meta charset="UTF-8">
+        <meta name="description" content="Comp 7402 - Assignment #1">
+        <meta name="keywords" content="HTML,CSS,JavaScript">
+        <meta name="author" content="Kuanysh Boranbayev">
+        <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
+        <script
+            src="https://code.jquery.com/jquery-3.4.1.js"
+            integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+            crossorigin="anonymous"></script>
+        <script>
+            var input, input2, output, output2;
+            var ti2, ti4, tihash, ti2hash;
+            var totalBitsPlain, changedBitsPlain;
+            
+            function convert() {
+                ti2 = "", ti4 = "";
+                output=document.getElementById("ti2");
+                input=document.getElementById("ti1").value;
+                output2 =document.getElementById("ti4");
+                input2=document.getElementById("ti3").value;
+                
+                tihash=document.getElementById("ti1-hash");
+                ti2hash=document.getElementById("ti3-hash");
+                
+                tihash.value = sha256(input);
+                ti2hash.value = sha256(input2);
+                
+                var h1 = tihash.value;
+                var h2 = ti2hash.value;
+                
+                var i1 = "", i2 = "";
+                totalBitsPlain = 0, changedBitsPlain = 0;
+                
+                for (i = 0; i < input.length; i++) {
+                    var n = input[i].charCodeAt(0).toString(2);
+                    i1 += "00000000".substr(n.length) + n;
+                    var m = input2[i].charCodeAt(0).toString(2);
+                    i2 += "00000000".substr(m.length) + m;
+                }
+                for (i = 0; i < i1.length; i++) {
+                    totalBitsPlain++;
+                    changedBitsPlain += parseInt(i1[i]) ^ parseInt(i2[i]);
+                }
+                
+                output.value = "";
+                for (i=0; i < h1.length; i++) {
+                    var n = h1[i].charCodeAt(0).toString(2);
+                    output.value += "00000000".substr(n.length) + n + " ";
+                    ti2 += "00000000".substr(n.length) + n;
+                }
+
+                output2.value = "";
+                for (i=0; i < h2.length; i++) {
+                    var n = h2[i].charCodeAt(0).toString(2);
+                    output2.value += "00000000".substr(n.length) + n + " ";
+                    ti4 += "00000000".substr(n.length) + n;
+                }
+                
+                
+            }
+            
+            function sha256(ascii) {
+                function rightRotate(value, amount) {
+                    return (value>>>amount) | (value<<(32 - amount));
+                };
+                
+                var mathPow = Math.pow;
+                var maxWord = mathPow(2, 32);
+                var lengthProperty = 'length'
+                var i, j; // Used as a counter across the whole file
+                var result = ''
+
+                var words = [];
+                var asciiBitLength = ascii[lengthProperty]*8;
+                
+                //* caching results is optional - remove/add slash from front of this line to toggle
+                // Initial hash value: first 32 bits of the fractional parts of the square roots of the first 8 primes
+                // (we actually calculate the first 64, but extra values are just ignored)
+                var hash = sha256.h = sha256.h || [];
+                // Round constants: first 32 bits of the fractional parts of the cube roots of the first 64 primes
+                var k = sha256.k = sha256.k || [];
+                var primeCounter = k[lengthProperty];
+                /*/
+                var hash = [], k = [];
+                var primeCounter = 0;
+                //*/
+
+                var isComposite = {};
+                for (var candidate = 2; primeCounter < 64; candidate++) {
+                    if (!isComposite[candidate]) {
+                        for (i = 0; i < 313; i += candidate) {
+                            isComposite[i] = candidate;
+                        }
+                        hash[primeCounter] = (mathPow(candidate, .5)*maxWord)|0;
+                        k[primeCounter++] = (mathPow(candidate, 1/3)*maxWord)|0;
+                    }
+                }
+                
+                ascii += '\x80' // Append Ƈ' bit (plus zero padding)
+                while (ascii[lengthProperty]%64 - 56) ascii += '\x00' // More zero padding
+                for (i = 0; i < ascii[lengthProperty]; i++) {
+                    j = ascii.charCodeAt(i);
+                    if (j>>8) return; // ASCII check: only accept characters in range 0-255
+                    words[i>>2] |= j << ((3 - i)%4)*8;
+                }
+                words[words[lengthProperty]] = ((asciiBitLength/maxWord)|0);
+                words[words[lengthProperty]] = (asciiBitLength)
+                
+                // process each chunk
+                for (j = 0; j < words[lengthProperty];) {
+                    var w = words.slice(j, j += 16); // The message is expanded into 64 words as part of the iteration
+                    var oldHash = hash;
+                    // This is now the undefinedworking hash", often labelled as variables a...g
+                    // (we have to truncate as well, otherwise extra entries at the end accumulate
+                    hash = hash.slice(0, 8);
+                    
+                    for (i = 0; i < 64; i++) {
+                        var i2 = i + j;
+                        // Expand the message into 64 words
+                        // Used below if 
+                        var w15 = w[i - 15], w2 = w[i - 2];
+
+                        // Iterate
+                        var a = hash[0], e = hash[4];
+                        var temp1 = hash[7]
+                            + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25)) // S1
+                            + ((e&hash[5])^((~e)&hash[6])) // ch
+                            + k[i]
+                            // Expand the message schedule if needed
+                            + (w[i] = (i < 16) ? w[i] : (
+                                    w[i - 16]
+                                    + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15>>>3)) // s0
+                                    + w[i - 7]
+                                    + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2>>>10)) // s1
+                                )|0
+                            );
+                        // This is only used once, so *could* be moved below, but it only saves 4 bytes and makes things unreadble
+                        var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22)) // S0
+                            + ((a&hash[1])^(a&hash[2])^(hash[1]&hash[2])); // maj
+                        
+                        hash = [(temp1 + temp2)|0].concat(hash); // We don't bother trimming off the extra ones, they're harmless as long as we're truncating when we do the slice()
+                        hash[4] = (hash[4] + temp1)|0;
+                    }
+                    
+                    for (i = 0; i < 8; i++) {
+                        hash[i] = (hash[i] + oldHash[i])|0;
+                    }
+                }
+                
+                for (i = 0; i < 8; i++) {
+                    for (j = 3; j + 1; j--) {
+                        var b = (hash[i]>>(j*8))&255;
+                        result += ((b < 16) ? 0 : '') + b.toString(16);
+                    }
+                }
+                return result;
+            };
+            
+            function calculate() {
+                var hash1 = ti2;
+                var hash2 = ti4;
+                
+                var total = document.getElementById("ti5");
+                var result = document.getElementById("ti6");
+                
+                var count = 0, totalBits = 0;
+                var totalLength = (hash1.length > hash2.length) ? hash1.length : hash2.length;
+                for (i = 0; i < totalLength; i++) {
+                    totalBits++;
+                    count += parseInt(hash1[i]) ^ parseInt(hash2[i]);
+                }
+                
+                var percent = count * 100 / totalBits;
+                
+                appendNewData(input, input2, totalBits, count, percent);
+            }
+            
+            function appendNewData(plaintext, plaintext2, totalBits, changedBits, percent) {
+                $("table").find("tr:last").clone().appendTo($("table"));
+                $("table").find("tr:last").find(".plaintext").each(function () {
+                    $(this).empty();
+                    $(this).append(plaintext);
+                });
+                $("table").find("tr:last").find(".ciphertext").each(function () {
+                    $(this).empty();
+                    $(this).append(sha256(plaintext));
+                });
+                $("table").find("tr:last").find(".plaintext2").each(function () {
+                    $(this).empty();
+                    $(this).append(plaintext2);
+                });
+                $("table").find("tr:last").find(".ciphertext2").each(function () {
+                    $(this).empty();
+                    $(this).append(sha256(plaintext2));
+                });
+                $("table").find("tr:last").find(".totalBitsPlain").each(function () {
+                    $(this).empty();
+                    $(this).append(totalBitsPlain);
+                });
+                $("table").find("tr:last").find(".changedBitsPlain").each(function () {
+                    $(this).empty();
+                    $(this).append(changedBitsPlain);
+                });
+                $("table").find("tr:last").find(".totalBits").each(function () {
+                    $(this).empty();
+                    $(this).append(totalBits);
+                });
+                $("table").find("tr:last").find(".changedBits").each(function () {
+                    $(this).empty();
+                    $(this).append(changedBits);
+                });
+                $("table").find("tr:last").find(".percentBits").each(function () {
+                    $(this).empty();
+                    $(this).append(percent);
+                });
+            }
+
+            function download_csv(csv, filename) {
+                var csvFile;
+                var downloadLink;
+
+                // CSV FILE
+                csvFile = new Blob([csv], {type: "text/csv"});
+
+                // Download link
+                downloadLink = document.createElement("a");
+
+                // File name
+                downloadLink.download = filename;
+
+                // We have to create a link to the file
+                downloadLink.href = window.URL.createObjectURL(csvFile);
+
+                // Make sure that the link is not displayed
+                downloadLink.style.display = "none";
+
+                // Add the link to your DOM
+                document.body.appendChild(downloadLink);
+
+                // Lanzamos
+                downloadLink.click();
+            }
+            
+            function export_table_to_csv() {
+                var csv = [];
+                var rows = document.querySelectorAll("table tr");
+                
+                for (var i = 0; i < rows.length; i++) {
+                    var row = [], cols = rows[i].querySelectorAll("td, th");
+                    
+                    for (var j = 0; j < cols.length; j++) 
+                        row.push(cols[j].innerText);
+                    
+                    csv.push(row.join(","));		
+                }
+
+                // Download CSV
+                download_csv(csv.join("\n"), "data.csv");
+            }
+            
+            $('.hidden').hide();
+            $('.toggle-text').click(function() {
+                $(this).find('span').each(function() { $(this).toggle(); });
+            });
+        </script>
+    </head>
+    <body>
+        <div class="jumbotron">
+            <div>
+                <p class="text-center">
+                    Cryptography and Cryptanalysis
+                </p>
+                <p class="text-justify">
+                    The program is built only using Javascript and JQuery. The purpose of the program is to test the Avalanche effect of the string hashes generated by SHA256 algorithm. Currently, the program reads only two strings at a time and calculates the bit changes in their corresponding hashes.
+                    <br>
+                        <span class="text-center">Instructions:</span>
+                    <br>
+                    <ul>
+                        <li>Type a first word or phrase in under input field labelled "Plaintext".</li>
+                        <li>Type a second word or phrase in under input field labelled "Plaintext2".</li>
+                        <li>Note: "Ciphertext", "Ciphertext2", "Ciphertext in bits", and "Ciphertext2 in bits" fields are left empty intentionally.</li>
+                        <li>After done typing plaintexts, press button "Convert" which will fill up the left empty fields</li>
+                        <li>"Ciphertext" and "Ciphertext2" are generated by SHA256 algorithm</li>
+                        <li>"Ciphertext in bits" and "Ciphertext2 in bits" are the same ciphertexts converted to bits.</li>
+                        <li>Next, click the button "Calculate" which will calculate the total number of bits in plaintext and in their corresponding ciphertexts, and the number of changed bits, and the percentage of the changed bits.</li>
+                        <li>At this point, you can repeat the all steps above as many times as you want. The results will be kept in the browser as long as the page did not refresh./li>
+                        <li>At the end, click "Download CSV" which will generate "data.csv" file and starts the download process.</li>
+                    </ul> 
+                    
+                    
+                </p>
+            </div>
+  
+            <form>
+                <div class="form-group">
+                    <label for="plaintext">Plaintext <small>Type here!</small></label>
+                    <input id="ti1" size="100" value ="word1"/>
+                </div>
+                <div class="form-group">
+                    <label for="ciphertext">Ciphertext</label>
+                    <input id="ti1-hash" size="150" value = "word1-sha256" />
+                </div>
+                <div class="form-group">
+                    <label for="ciphertext">Ciphertext in bits</label>
+                    <input id="ti2" size="150" value="word1-sha256-bits"/>
+                </div>
+                <br>
+                <div class="form-group">
+                    <label for="plaintext2">Plaintext2 <small>Type here!</small></label>
+                    <input id="ti3" size="150" value ="word2"/>
+                </div>
+                <div class="form-group">
+                    <label for="ciphertext2">Ciphertext2</label>
+                    <input id="ti3-hash" size="100" value = "word2-sha256"/>
+                </div>
+                <div class="form-group">
+                    <label for="ciphertext">Ciphertext2 in bits</label>
+                    <input id="ti4" size="150" value="word2-sha256-bits"/>
+                </div>
+            </form>
+            <br>
+            <div class="container">
+                <button class="btn btn-primary" onclick="convert();">Convert</button>
+                <button class="btn btn-warning" onclick="calculate();">Calculate</button>
+                <button class="btn btn-success" id="write" onclick="export_table_to_csv();">Download CSV</button>
+            </div>
+            <br>
+            <table class="table table-dark" id="table">
+                <thead>
+                    <tr>
+                        <th>Plaintext</th>
+                        <th>Ciphertext (SHA256)</th>
+                        <th>Plaintext2</th>
+                        <th>Ciphertext2 (SHA256)</th>
+                        <th>Total Number of Bits in Plaintext</th>
+                        <th>Changed Number of Bits in Plaintext</th>
+                        <th>Total Number of Bits in Ciphertext</th>
+                        <th>Changed Number of Bits in Ciphertext</th>
+                        <th>Percentage of Effected Bits</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="plaintext" />
+                        <td class="ciphertext" />
+                        <td class="plaintext2" />
+                        <td class="ciphertext2" />
+                        <td class="totalBitsPlain" />
+                        <td class="changedBitsPlain" />
+                        <td class="totalBits" />
+                        <td class="changedBits" />
+                        <td class="percentBits" />
+                    </tr>
+                </tbody>
+            </table>
+            <footer class="page-footer font-small">
+                <!-- Copyright -->
+                <div class="footer-copyright text-center py-3">© 2020 Kuanysh Boranbayev</div>
+                <!-- Copyright -->
+            </footer>
+        </div>
+    </body>
+</html>
